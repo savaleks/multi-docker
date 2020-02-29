@@ -1,0 +1,24 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t savaleks/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run savaleks/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t savaleks/multi-client ./client
+    - docker build -t savaleks/multi-nginx ./nginx
+    - docker build -t savaleks/multi-server ./server
+    - docker build -t savaleks/multi-worker ./worker
+
+# Log in to the docker CLI
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+# Take those images and push them to docker hub
+- docker push savaleks/multi-client
+- docker push savaleks/multi-nginx
+- docker push savaleks/multi-server
+- docker push savaleks/multi-worker
